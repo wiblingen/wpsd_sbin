@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# This script checks for background/bootstrap tasks, which are used for near
+# real-time bug fixes, etc.: exec'd before manual and cron updates; called from
+# dashboard's main index page via JS refresh/reload func, `function
+# executeBackgroundTasks()` which is called every 5 mins, but task only
+# execs every 1 hour.
+#
+# Task script itself lives in repo ($BackendURI) and is piped to bash from there.
+
+if [ "$(id -u)" != "0" ]; then # must be root
+  exit 1
+fi
+
+exec 200>/var/lock/wpsd-bg-tasks.lock || exit 1 # only one exec per time
+if ! flock -n 200 ; then
+  exit 1
+fi
+
+# check age of task marker file if it exists, and if it's < 1 hour young, bail.
+if [  -f '/var/run/wpsd-bg-tasks' ] && [ "$(( $(date +"%s") - $(stat -c "%Y" "/var/run/wpsd-bg-tasks") ))" -lt "3600" ]; then
+    exit 0 # marker either does not exist or it's 1+ hour - so we continue running this script...
+fi
+
+source /usr/local/sbin/.wpsd-common-funcs
+BackendURI="https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/bg-tasks/run-tasks.sh"
+
+status_code=$(curl -m 6 -A "ConnCheck Client Side - Grab Server WPSD-BG-Task ${uaStr}" --write-out %{http_code} --silent --output /dev/null "$BackendURI")
+if [[ ! $status_code == 20* ]] || [[ ! $status_code == 30* ]] ; then # connection OK...keep going
+    touch /var/run/wpsd-bg-tasks # create/reset the task marker age
+    curl -Ls -A "Grab Server WPSD-BG-Task ${uaStr}" ${BackendURI} | bash > /dev/null 2<&1 # bootstrap
+else
+    exit 1 # connection bad; bail.
+fi

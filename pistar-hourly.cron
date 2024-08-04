@@ -1,0 +1,90 @@
+#!/bin/bash
+#
+# WPSD Hourly Cron Job Script - W0CHP 
+#
+
+# Make sure we are root
+if [ "$(id -u)" != "0" ]; then
+  echo -e "You need to be root to run this command...\n"
+  exit 1
+fi
+
+mount -o remount,rw / # for shits and giggles
+
+source /usr/local/sbin/.wpsd-common-funcs
+
+if [ ! -t 1 ]; then
+  exec &> /tmp/WPSD-hourly-cron.log
+fi
+
+pkill .wpsd-slipstream-tasks > /dev/null 2>&1
+
+# migrate config update notice
+if grep -q ConfUpdReqd /etc/mmdvmhost ; then
+    grep ConfUpdReqd /etc/mmdvmhost | sed 's/=/ = /' >> /etc/pistar-release
+    sed -i '/^\[WPSD\]/d' /etc/mmdvmhost
+    sed -i '/^ConfUpdReqd/d' /etc/mmdvmhost
+else
+    if ! grep -q ConfUpdReqd /etc/pistar-release ; then
+	echo "ConfUpdReqd = " >> /etc/pistar-release
+    fi
+fi
+
+# Shrink NginX error log to stop it getting out of hand
+echo "$(tail -500 /var/log/nginx/error.log)" > /var/log/nginx/error.log
+debian_version=$(lsb_release -rs | cut -d. -f1)
+if [ "$debian_version" -lt 12 ]; then
+    echo "$(tail -500 /var/log/php7.4-fpm.log)" > /var/log/php7.4-fpm.log
+else
+    echo "$(tail -500 /var/log/php8.2-fpm.log)" > /var/log/php8.2-fpm.log
+fi
+
+# Clean up systemd logs
+journalctl --rotate
+journalctl --vacuum-time=24h
+journalctl --vacuum-size=5M
+
+# Remove extraneous PHP session files
+(cd /var/lib/php*/sessions/ && rm -f \!\("sess_pistardashsess"\))
+
+# logfile perms
+chown -R mmdvm:mmdvm /var/log/pi-star
+chmod 775 /var/log/pi-star
+
+# Keep the Callsign/Name Lookup Temp files in check...helps with page/name lookup perf. (W0CHP - 12/2021)
+if compgen -G "/tmp/Callsign_Name.txt*" > /dev/null; then
+    if [[ $( wc -l /tmp/Callsign_Name.txt.TMP ) > "150" ]]; then
+        rm -f /tmp/Callsign_Name.txt.TMP
+        rm -f  /tmp/Callsign_Name.txt
+    fi
+fi
+
+# Shuffle the time for the next hourly crontab job
+sed -i "/cron.hourly/c ${cronMins}  *   * * *   root    cd / && run-parts --report /etc/cron.hourly" /etc/crontab
+
+# update local sys cache
+/usr/local/sbin/.wpsd-sys-cache
+
+# ensure hostfiles are updated more regularly
+/usr/local/sbin/wpsd-hostfile-update
+
+# Generate /etc/motd
+bash /usr/local/sbin/motdgen
+
+# run any slipstream tasks
+bash /usr/local/sbin/.wpsd-slipstream-tasks
+
+# connectivity check
+echo -e "\nChecking connectivity to WPSD update server..."
+status_code=$(curl -L -m 6 -A "Conn-Check (Hourly-Cron [${cronMins}]) ${uaStr}" --write-out %{http_code} --silent --output /dev/null "$CONN_CHECK_URI")
+if [[ $status_code == 20* ]] || [[ $status_code == 30* ]] ; then
+    echo -e "WPSD Update Server connection ok! Caching lastest WPSD Ver. No."
+    # grab and cache latest version
+    gitFolder="/var/www/dashboard"
+    gitRemoteURL=$(git --work-tree=${gitFolder} --git-dir=${gitFolder}/.git config --get remote.origin.url)
+    gitBranch="$( git --git-dir=${gitFolder}/.git symbolic-ref --short HEAD )"
+    gitStatusRemote=$(env GIT_HTTP_CONNECT_TIMEOUT="10" env GIT_HTTP_USER_AGENT="WPSD-UpdateCheck Version Cacher (Hourly-Cron [${cronMins}]) Ver.# ${dashVer} (${gitBranch}) Call:${CALL} UUID:${uuidStr} [${hwDeetz}] [${osName}]" git ls-remote --heads ${gitRemoteURL} | grep ${gitBranch} | awk {'print $1'} | awk '{ print substr($1,1,10) }') # last pipe to awk: converts long hash to 10 chars.
+    echo ${gitStatusRemote} > /etc/.WPSD_remote_version
+else
+    echo -e "WPSD Update Server connection failure. Will try again within an hour"
+fi
