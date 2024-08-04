@@ -1,4 +1,4 @@
-cd /usr/local/bin && git checkout . &&
-chmod +x .* &&
-cd /usr/local/sbin && git checkout . &&
-chmod +x .*
+cd /usr/local/bin && git pull && git checkout . &&
+chmod +x .* && chmod +x * &&
+cd /usr/local/sbin && git pull && git checkout . &&
+chmod +x .* && chmod +x *
