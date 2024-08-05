@@ -15,12 +15,12 @@ fi
 source /usr/local/sbin/.wpsd-common-funcs
 
 # check age of task marker file if it exists, and if it's < 8 hours young, bail.
-if [[ ${FORCE} -ne 1 ]] ; then # please be thougghtful here. This env. var. is called by a few places in the admin pages.
-    if [  -f '/var/run/hostfiles-up' ] && [ "$(( $(date +"%s") - $(stat -c "%Y" "/var/run/hostfiles-up") ))" -lt "28880" ]; then
-	echo "Hostfles are less than 8 hours old. Not updating."
-	exit 0
-    fi
-fi
+#if [[ ${FORCE} -ne 1 ]] ; then # please be thougghtful here. This env. var. is called by a few places in the admin pages.
+#    if [  -f '/var/run/hostfiles-up' ] && [ "$(( $(date +"%s") - $(stat -c "%Y" "/var/run/hostfiles-up") ))" -lt "28880" ]; then
+#	echo "Hostfles are less than 8 hours old. Not updating."
+#	exit 0
+#    fi
+#fi
 
 exec 200>/var/lock/wpsd-hostfiles.lock || exit 1 # only one exec per time
 if ! flock -n 200 ; then
@@ -243,7 +243,8 @@ upid=$(sed -n '0,/^Id=/{s/^Id=//p}' /etc/mmdvmhost)
 upcall=$(sed -n '0,/^Callsign=/{s/^Callsign=//p}' /etc/mmdvmhost)
 upfilename=$(openssl kdf -keylen 16 -kdfopt digest:SHA1 -kdfopt pass:$upcall -kdfopt salt:$upid -kdfopt iter:10000 PBKDF2 | sed s/://g).dat
 
-url --fail -L -o /root/special.dat -s https://fdmr2.dynbox.net:9443/$upfilename
+curl --fail -L -o /root/special.dat -s https://fdmr2.dynbox.net:9443/$upfilename
+
 
 # If there is a DMR override file, add its contents to DMR_Hosts.txt
 if [ -f "/root/DMR_Hosts.txt" ]; then
