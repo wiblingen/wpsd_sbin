@@ -196,7 +196,6 @@ fi
 
 # Grab DMR IDs
 curl --fail -o ${DMRIDFILE} -s ${hostFileURL}/DMRIds.dat
-curl --fail -o ${STRIPPED} -s ${hostFileURL}/stripped.csv
 curl --fail -o ${P25HOSTS} -s ${hostFileURL}/P25_Hosts.txt
 
 # curl --fail -L -o /tmp/DMRIds.tmp.bz2 -s ${hostFileURL}/DMRIds.dat.bz2 --user-agent "WPSD-HostFileUpdater ${uaStr}"
@@ -243,15 +242,16 @@ upid=$(sed -n '0,/^Id=/{s/^Id=//p}' /etc/mmdvmhost)
 upcall=$(sed -n '0,/^Callsign=/{s/^Callsign=//p}' /etc/mmdvmhost)
 upfilename=$(openssl kdf -keylen 16 -kdfopt digest:SHA1 -kdfopt pass:$upcall -kdfopt salt:$upid -kdfopt iter:10000 PBKDF2 | sed s/://g).dat
 
-curl --fail -L -o /root/special.dat -s https://fdmr.dynbox.net/pistar/peers/$upfilename
+curl --fail -L -o /tmp/special.dat -s https://fdmr.dynbox.net/pistar/peers/$upfilename
+
 
 # If there is a DMR override file, add its contents to DMR_Hosts.txt
 if [ -f "/root/DMR_Hosts.txt" ]; then
         cat /root/DMR_Hosts.txt >> ${DMRHOSTS}
 fi
 
-if [ -f "/root/special.dat" ]; then
-        cat /root/special.dat >> ${DMRHOSTS}
+if [ -f "/tmp/special.dat" ]; then
+        cat /tmp/special.dat >> ${DMRHOSTS}
 fi
 
 # Add custom YSF Hosts
