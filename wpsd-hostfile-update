@@ -150,6 +150,7 @@ else
     ${YSFHOSTS}
     ${FCSHOSTS}
     ${XLXHOSTS}
+    ${TGLISAMCOMM}
     ${NXDNIDFILE}
     ${NXDNHOSTS}
     ${TGLISTBM}
