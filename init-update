@@ -151,6 +151,7 @@ else
     ${FCSHOSTS}
     ${XLXHOSTS}
     ${NXDNIDFILE}
+    ${TGLISAMCOMM}
     ${NXDNHOSTS}
     ${TGLISTBM}
     ${TGLISTTGIF}
