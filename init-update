@@ -318,6 +318,17 @@ sed -i '1d' ${RADIOIDDB}
 rm -rf ${STRIPPED}
 ln -s ${RADIOIDDB} ${STRIPPED}
 
+#/usr/lib/systemd/system/
+
+if [ -x /usr/lib/systemd/system/virtualtty.service ]; then
+	echo "VTTY service installed"
+else
+	cp /usr/local/sbin/virtualtty.service /usr/lib/systemd/system/
+	systemctl daemon-reload
+	systemctl enable virtualtty.service
+	systemctl start virtualtty.service
+fi
+
 touch /var/run/hostfiles-up # create/reset marker
 
 if [ -t 1 ] ; then
