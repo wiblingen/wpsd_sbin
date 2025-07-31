@@ -320,6 +320,16 @@ ln -s ${RADIOIDDB} ${STRIPPED}
 
 #/usr/lib/systemd/system/
 
+if [ -x /lib/systemd/system/tnygps.service ]; then
+ echo "Tiny-GPS-Daemon already installed"
+else
+ cp /usr/local/sbin/tnygps.service /lib/systemd/system/
+ cp /usr/local/sbin/tnygps.conf /usr/local/etc/
+ chmod 777 /usr/local/sbin/tnygps.conf
+ systemctl daemon-reload
+ systemctl enable tnygps.service
+fi
+
 if [ -x /usr/lib/systemd/system/virtualtty.service ]; then
 	echo "VTTY service installed"
 else
