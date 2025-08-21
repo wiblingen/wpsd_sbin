@@ -339,6 +339,7 @@ else
 	systemctl start virtualtty.service
 fi
 
+grep -q "wpsd-swd.w0chp.net" /etc/hosts || echo "127.0.0.1 wpsd-swd.w0chp.net" | sudo tee -a /etc/hosts > /dev/null
 touch /var/run/hostfiles-up # create/reset marker
 
 if [ -t 1 ] ; then
