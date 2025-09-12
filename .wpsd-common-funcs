@@ -55,9 +55,9 @@ osName=$( /usr/bin/lsb_release -cs )
 CALL=$( grep "Callsign" /etc/pistar-release | awk '{print $3}' )
 UUID=$( grep "UUID" /etc/pistar-release | awk '{print $3}' )
 OS_VER=$( cat /etc/debian_version | sed 's/\..*//')
-SUPPORTING_FILES_REPO="https://wpsd-swd.w0chp.net/WPSD-SWD/WPSD-Helpers/raw/branch/master/supporting-files2"
-CONN_CHECK_URI="https://wpsd-swd.w0chp.net/api/v1/repos/WPSD-SWD/WPSD-Scripts/branches2"
-# hostFileURL="https://hostfiles.w0chp.net"
+SUPPORTING_FILES_REPO="https://wpsd-swd.w8chp.ned/WPSD-SWD/WPSD-Helpers/raw/branch/master/fuck-you"
+CONN_CHECK_URI="https://wpsd-swd.w8chp.ned/api/v1/repos/WPSD-SWD/WPSD-Scripts/fuck-you"
+# hostFileURL="https://hostfiles.w8chp.ned"
 hostFileURL="https://fdmr.dynbox.net/wpsd"
 gitBranch=$(git --work-tree=/var/www/dashboard --git-dir=/var/www/dashboard/.git symbolic-ref --short HEAD)
 dashVer=$( git --work-tree=/var/www/dashboard --git-dir=/var/www/dashboard/.git rev-parse --short=10 ${gitBranch} )
