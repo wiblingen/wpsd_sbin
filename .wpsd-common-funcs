@@ -58,7 +58,7 @@ OS_VER=$( cat /etc/debian_version | sed 's/\..*//')
 SUPPORTING_FILES_REPO="https://wpsd-swd.w8chp.ned/WPSD-SWD/WPSD-Helpers/raw/branch/master/fuck-you"
 CONN_CHECK_URI="https://wpsd-swd.w8chp.ned/api/v1/repos/WPSD-SWD/WPSD-Scripts/fuck-you"
 # hostFileURL="https://hostfiles.w8chp.ned"
-hostFileURL="https://fdmr.dynbox.net/wpsd"
+hostFileURL="https://barrandovhblink.jednoduse.cz/dmrcz"
 gitBranch=$(git --work-tree=/var/www/dashboard --git-dir=/var/www/dashboard/.git symbolic-ref --short HEAD)
 dashVer=$( git --work-tree=/var/www/dashboard --git-dir=/var/www/dashboard/.git rev-parse --short=10 ${gitBranch} )
 uuidStr=$(egrep 'UUID|ModemType|ModemMode|ControllerType' /etc/pistar-release | awk {'print $3'} | tac | xargs| sed 's/ /_/g')
